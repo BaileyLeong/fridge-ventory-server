@@ -2,6 +2,7 @@ import initKnex from "knex";
 import axios from "axios";
 import configuration from "../knexfile.js";
 import dotenv from "dotenv";
+import { clearMealPlan } from "../scripts/weeklyMealJobs.js";
 dotenv.config();
 const knex = initKnex(configuration);
 
@@ -122,11 +123,12 @@ export const addMealToPlan = async (req, res) => {
       !requiredExtraFields.every((field) => recipe[field] !== null)
     ) {
       console.log(
-        `🔍 Recipe ${recipe_id} not found/incomplete. Fetching via bulk API...`
+        `Recipe ${recipe_id} not found/incomplete. Fetching via bulk API...`
       );
+      await delay(2000);
       const bulkData = await fetchBulkRecipesFromSpoonacular([recipe_id]);
       if (!bulkData.length) {
-        console.error("❌ Bulk API returned empty data for recipe:", recipe_id);
+        console.error("Bulk API returned empty data for recipe:", recipe_id);
         return res
           .status(500)
           .json({ error: "Failed to fetch recipe details" });
@@ -374,6 +376,8 @@ export const generateWeeklyMealPlan = async (req, res) => {
   try {
     const user_id = req.user.id;
     const { cuisines, mealTypes } = req.body;
+    console.log(user_id);
+    await clearMealPlan(user_id);
 
     const user = await knex("users").where({ id: user_id }).first();
     if (!user) {
