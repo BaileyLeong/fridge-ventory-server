@@ -33,32 +33,5 @@ export const seed = async function (knex) {
       expires_at: "2025-04-10",
       image_url: "https://spoonacular.com/cdn/ingredients_500x500/butter.jpg",
     }, // Butter
-    {
-      user_id: 2,
-      ingredient_id: 93740, // Almond Flour
-      quantity: 500,
-      unit: "g",
-      expires_at: "2025-03-01",
-      image_url:
-        "https://spoonacular.com/cdn/ingredients_500x500/almond-flour.jpg",
-    },
-    {
-      user_id: 2,
-      ingredient_id: 93607, // Almond Milk
-      quantity: 1,
-      unit: "L",
-      expires_at: "2025-02-22",
-      image_url:
-        "https://spoonacular.com/cdn/ingredients_500x500/almond-milk.jpg",
-    },
-    {
-      user_id: 2,
-      ingredient_id: 4047, // Coconut Oil
-      quantity: 200,
-      unit: "g",
-      expires_at: "2025-04-10",
-      image_url:
-        "https://spoonacular.com/cdn/ingredients_500x500/coconut-oil.jpg",
-    },
   ]);
 };
