@@ -170,37 +170,5 @@ export const seed = async function (knex) {
       category: "Dairy",
       image_url: "https://img.spoonacular.com/ingredients_500x500/egg.jpg",
     },
-    {
-      id: 20081,
-      image_url: "https://spoonacular.com/cdn/ingredients_500x500/flour.jpg",
-    }, // Flour
-    {
-      id: 1077,
-      image_url: "https://spoonacular.com/cdn/ingredients_500x500/milk.jpg",
-    }, // Milk
-    {
-      id: 1123,
-      image_url: "https://spoonacular.com/cdn/ingredients_500x500/egg.jpg",
-    }, // Eggs
-    {
-      id: 1001,
-      quantity: 200,
-      image_url: "https://spoonacular.com/cdn/ingredients_500x500/butter.jpg",
-    }, // Butter
-    {
-      id: 93740, // Almond Flour
-      image_url:
-        "https://spoonacular.com/cdn/ingredients_500x500/almond-flour.jpg",
-    },
-    {
-      id: 93607, // Almond Milk
-      image_url:
-        "https://spoonacular.com/cdn/ingredients_500x500/almond-milk.jpg",
-    },
-    {
-      id: 4047, // Coconut Oil
-      image_url:
-        "https://spoonacular.com/cdn/ingredients_500x500/coconut-oil.jpg",
-    },
   ]);
 };
