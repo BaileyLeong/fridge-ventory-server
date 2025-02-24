@@ -14,6 +14,8 @@ const isCacheValid = (cachedAt) => {
   return new Date(cachedAt) > oneHourAgo;
 };
 
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const fetchBulkRecipesFromSpoonacular = async (recipeIds) => {
   try {
     const response = await axios.get(
@@ -98,6 +100,8 @@ export const addMealToPlan = async (req, res) => {
     const { recipe_id, meal_type, date } = req.body;
     const user_id = req.user.id;
 
+    console.log("received meal:", req.body);
+
     if (!user_id || !recipe_id || !meal_type) {
       return res.status(400).json({ error: "Required fields are missing" });
     }
@@ -110,28 +114,33 @@ export const addMealToPlan = async (req, res) => {
     let recipe = await knex("recipes").where("id", recipe_id).first();
 
     const requiredExtraFields = ["category", "ready_in_minutes", "servings"];
+    let fetchedRecipe;
 
     if (
       !recipe ||
       recipe.steps === "No instructions available." ||
       !requiredExtraFields.every((field) => recipe[field] !== null)
     ) {
-      const response = await axios.get(
-        `${SPOONACULAR_BASE_URL}/recipes/${recipe_id}/information`,
-        {
-          headers: { "x-rapidapi-key": SPOONACULAR_API_KEY },
-        }
+      console.log(
+        `🔍 Recipe ${recipe_id} not found/incomplete. Fetching via bulk API...`
       );
-      const fetchedRecipe = response.data;
+      const bulkData = await fetchBulkRecipesFromSpoonacular([recipe_id]);
+      if (!bulkData.length) {
+        console.error("❌ Bulk API returned empty data for recipe:", recipe_id);
+        return res
+          .status(500)
+          .json({ error: "Failed to fetch recipe details" });
+      }
+      fetchedRecipe = bulkData[0];
       recipe = {
         id: fetchedRecipe.id,
-        name: fetchedRecipe.title,
-        image_url: fetchedRecipe.image,
-        source_url: fetchedRecipe.spoonacularSourceUrl,
-        category: fetchedRecipe.dishTypes?.[0] || "main course",
-        ready_in_minutes: fetchedRecipe.readyInMinutes,
+        name: fetchedRecipe.name,
+        image_url: fetchedRecipe.image_url,
+        source_url: fetchedRecipe.source_url,
+        category: fetchedRecipe.category,
+        ready_in_minutes: fetchedRecipe.ready_in_minutes,
         servings: fetchedRecipe.servings,
-        steps: recipe.sourceUrl || "No instructions available.",
+        steps: fetchedRecipe.steps,
         cached_at: new Date(),
       };
       await knex("recipes").insert(recipe).onConflict("id").merge();
@@ -141,16 +150,12 @@ export const addMealToPlan = async (req, res) => {
       .where("recipe_id", recipe_id)
       .select("ingredient_id", "amount_metric", "unit_metric");
 
-    if (!recipeIngredients || recipeIngredients.length === 0) {
-      const response = await axios.get(
-        `${SPOONACULAR_BASE_URL}/recipes/${recipe_id}/information`,
-        {
-          headers: { "x-rapidapi-key": SPOONACULAR_API_KEY },
-        }
-      );
-      const recipeInfo = response.data;
-      if (recipeInfo && recipeInfo.extendedIngredients) {
-        const extendedIngredients = recipeInfo.extendedIngredients;
+    if (
+      (!recipeIngredients || recipeIngredients.length === 0) &&
+      fetchedRecipe
+    ) {
+      const extendedIngredients = fetchedRecipe.extendedIngredients;
+      if (extendedIngredients && extendedIngredients.length > 0) {
         const ingredientNames = extendedIngredients.map((ing) =>
           ing.name.toLowerCase()
         );
@@ -192,6 +197,7 @@ export const addMealToPlan = async (req, res) => {
           unit_metric: ing.measures?.metric?.unitShort || null,
           cached_at: new Date(),
         }));
+        // Remove duplicate rows
         const uniqueRowsMap = new Map();
         ingredientRows.forEach((row) => {
           const key = `${row.recipe_id}-${row.ingredient_id}`;
@@ -369,13 +375,6 @@ export const generateWeeklyMealPlan = async (req, res) => {
     const user_id = req.user.id;
     const { cuisines, mealTypes } = req.body;
 
-    if (!Array.isArray(cuisines)) {
-      return res.status(400).json({ error: "Cuisines must be an array." });
-    }
-    if (!Array.isArray(mealTypes)) {
-      return res.status(400).json({ error: "Meal types must be an array." });
-    }
-
     const user = await knex("users").where({ id: user_id }).first();
     if (!user) {
       return res.status(404).json({ error: "User not found." });
@@ -390,12 +389,11 @@ export const generateWeeklyMealPlan = async (req, res) => {
       .distinct("ingredients.name")
       .pluck("ingredients.name");
 
-    if (ingredientNames.length === 0) {
-      return res.status(400).json({ error: "No ingredients found in fridge." });
-    }
+    console.log("🔍 Fetching meal plan from Spoonacular...");
+    await delay(500);
 
     const response = await axios.get(
-      "https://api.spoonacular.com/recipes/complexSearch",
+      "https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/complexSearch",
       {
         params: {
           includeIngredients: ingredientNames.join(","),
@@ -407,7 +405,7 @@ export const generateWeeklyMealPlan = async (req, res) => {
           addRecipeInformation: true,
           sort: "max-used-ingredients",
         },
-        headers: { "x-api-key": PRIMARY_API_KEY },
+        headers: { "x-rapidapi-key": SPOONACULAR_API_KEY },
       }
     );
 
@@ -415,27 +413,23 @@ export const generateWeeklyMealPlan = async (req, res) => {
       return res.status(404).json({ error: "No suitable recipes found." });
     }
 
-    const recipes = response.data.results.map((recipe) => ({
-      id: recipe.id,
-      title: recipe.title,
-      image: recipe.image,
-      readyInMinutes: recipe.readyInMinutes,
-      servings: recipe.servings,
+    const generatedMeals = response.data.results.map((recipe, index) => ({
+      recipe_id: recipe.id,
+      name: recipe.title,
+      image_url: recipe.image,
       source_url: recipe.spoonacularSourceUrl,
-      steps: recipe.sourceUrl || "No instructions available.",
+      meal_date: new Date(new Date().setDate(new Date().getDate() + index))
+        .toISOString()
+        .split("T")[0],
+      meal_type:
+        mealTypes.length > 0 ? mealTypes[index % mealTypes.length] : "dinner",
     }));
 
-    res.status(200).json(recipes);
+    res.status(200).json(generatedMeals);
   } catch (error) {
-    console.error(
-      "Error generating meal plan:",
-      error.response?.data || error.message
-    );
-
-    if (error.response?.status === 429) {
-      return res.status(429).json({ error: "API rate limit exceeded." });
-    }
-
-    res.status(500).json({ error: "Failed to generate meal plan" });
+    console.error("Error generating meal plan:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to generate meal plan", details: error.message });
   }
 };
