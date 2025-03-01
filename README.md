@@ -1,3 +1,5 @@
+[Click here to view the Client Repo](https://github.com/BaileyLeong/fridge-ventory)
+
 ## Database Setup
 
 ### 1. Install Dependencies
