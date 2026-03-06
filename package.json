@@ -8,7 +8,8 @@
     "dev": "nodemon index.js",
     "migrate": "knex migrate:latest",
     "rollback": "knex migrate:rollback",
-    "seed": "knex seed:run"
+    "seed": "knex seed:run",
+    "neon-check": "node scripts/neonCheck.cjs"
   },
   "keywords": [],
   "author": "",
@@ -24,7 +25,8 @@
     "mysql2": "^3.6.1",
     "node": "^22.14.0",
     "node-cron": "^3.0.3",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "@neondatabase/serverless": "^0.10.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"
