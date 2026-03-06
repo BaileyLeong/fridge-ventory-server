@@ -3,8 +3,8 @@ import configuration from "../knexfile.js";
 import axios from "axios";
 
 const knex = initKnex(configuration);
-const PRIMARY_API_KEY = process.env.SPOONACULAR_API_KEY;
-const SECONDARY_API_KEY = process.env.SPOONACULAR_SECONDARY_API_KEY;
+const SPOONACULAR_BASE_URL = process.env.SPOONACULAR_BASE_URL;
+const SPOONACULAR_API_KEY = process.env.SPOONACULAR_API_KEY;
 
 export const getAllFridgeItems = async (req, res) => {
   try {
@@ -52,9 +52,9 @@ export const addFridgeItem = async (req, res) => {
     if (!ingredient) {
       try {
         const response = await axios.get(
-          `https://api.spoonacular.com/food/ingredients/search?query=${name}&apiKey=${PRIMARY_API_KEY}`,
+          `${SPOONACULAR_BASE_URL}/food/ingredients/search`,
           {
-            headers: { "x-api-key": PRIMARY_API_KEY },
+            params: { query: name, apiKey: SPOONACULAR_API_KEY },
           }
         );
 
@@ -86,9 +86,9 @@ export const addFridgeItem = async (req, res) => {
     if (!image_url) {
       try {
         const response = await axios.get(
-          `https://api.spoonacular.com/food/ingredients/${ingredient_id}/information?apiKey=${SECONDARY_API_KEY}`,
+          `${SPOONACULAR_BASE_URL}/food/ingredients/${ingredient_id}/information`,
           {
-            headers: { "x-api-key": SECONDARY_API_KEY },
+            params: { apiKey: SPOONACULAR_API_KEY },
           }
         );
 

@@ -3,6 +3,7 @@ import configuration from "../knexfile.js";
 import axios from "axios";
 const knex = initKnex(configuration);
 
+const SPOONACULAR_BASE_URL = process.env.SPOONACULAR_BASE_URL;
 const API_KEY = process.env.SPOONACULAR_API_KEY;
 
 export const getAllRecipes = async (req, res) => {
@@ -79,7 +80,7 @@ export const suggestRecipes = async (req, res) => {
       allergens = "",
       cuisines = [],
       mealTypes = [],
-    } = req.body;
+    } = req.body || {};
 
     const ingredientNames = await knex("fridge_items")
       .join("ingredients", "fridge_items.ingredient_id", "ingredients.id")
@@ -94,9 +95,10 @@ export const suggestRecipes = async (req, res) => {
     const ingredientList = ingredientNames.join(",");
 
     const response = await axios.get(
-      "https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/complexSearch",
+      `${SPOONACULAR_BASE_URL}/recipes/complexSearch`,
       {
         params: {
+          apiKey: API_KEY,
           includeIngredients: ingredientList,
           diet: dietaryRestrictions || undefined,
           intolerances: allergens || undefined,
@@ -108,7 +110,6 @@ export const suggestRecipes = async (req, res) => {
           fillIngredients: true,
           sort: "max-used-ingredients",
         },
-        headers: { "x-rapidapi-key": API_KEY },
       }
     );
 
@@ -187,7 +188,7 @@ export const addRecipe = async (req, res) => {
       category: category || "Uncategorized",
       image_url: image_url || "https://placehold.co/500",
       source_url: source_url || "https://spoonacular.com",
-      steps: recipe.sourceUrl || "No instructions available.",
+      steps: steps || "No instructions available.",
       ready_in_minutes: ready_in_minutes || null,
       servings: servings || null,
     });
