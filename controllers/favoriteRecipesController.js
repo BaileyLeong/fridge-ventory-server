@@ -21,8 +21,7 @@ const fetchBulkRecipesFromSpoonacular = async (recipeIds) => {
     const response = await axios.get(
       `${SPOONACULAR_BASE_URL}/recipes/informationBulk`,
       {
-        params: { ids: recipeIds.join(",") },
-        headers: { "x-rapidapi-key": SPOONACULAR_API_KEY },
+        params: { ids: recipeIds.join(","), apiKey: SPOONACULAR_API_KEY },
       }
     );
 
@@ -48,7 +47,7 @@ const fetchRecipeFromSpoonacular = async (recipe_id) => {
     const response = await axios.get(
       `${SPOONACULAR_BASE_URL}/recipes/${recipe_id}/information`,
       {
-        headers: { "x-rapidapi-key": SPOONACULAR_API_KEY },
+        params: { apiKey: SPOONACULAR_API_KEY },
       }
     );
 

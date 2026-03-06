@@ -22,8 +22,7 @@ const fetchBulkRecipesFromSpoonacular = async (recipeIds) => {
     const response = await axios.get(
       `${SPOONACULAR_BASE_URL}/recipes/informationBulk`,
       {
-        params: { ids: recipeIds.join(",") },
-        headers: { "x-rapidapi-key": SPOONACULAR_API_KEY },
+        params: { ids: recipeIds.join(","), apiKey: SPOONACULAR_API_KEY },
       }
     );
 
@@ -397,9 +396,10 @@ export const generateWeeklyMealPlan = async (req, res) => {
     await delay(500);
 
     const response = await axios.get(
-      "https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/complexSearch",
+      `${SPOONACULAR_BASE_URL}/recipes/complexSearch`,
       {
         params: {
+          apiKey: SPOONACULAR_API_KEY,
           includeIngredients: ingredientNames.join(","),
           diet: dietaryRestrictions || undefined,
           intolerances: allergens || undefined,
@@ -409,7 +409,6 @@ export const generateWeeklyMealPlan = async (req, res) => {
           addRecipeInformation: true,
           sort: "max-used-ingredients",
         },
-        headers: { "x-rapidapi-key": SPOONACULAR_API_KEY },
       }
     );
 

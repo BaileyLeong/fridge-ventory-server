@@ -3,16 +3,15 @@ import configuration from "../knexfile.js";
 const knex = initKnex(configuration);
 
 import axios from "axios";
-const SPOONACULAR_API_KEY = process.env.SPOONACULAR_API_KEY;
 const SPOONACULAR_BASE_URL = process.env.SPOONACULAR_BASE_URL;
+const SPOONACULAR_API_KEY = process.env.SPOONACULAR_API_KEY;
 
 const fetchSpoonacularIngredients = async (query) => {
   try {
     const response = await axios.get(
       `${SPOONACULAR_BASE_URL}/food/ingredients/search`,
       {
-        params: { query },
-        headers: { "x-rapidapi-key": SPOONACULAR_API_KEY },
+        params: { query, apiKey: SPOONACULAR_API_KEY },
       }
     );
 
