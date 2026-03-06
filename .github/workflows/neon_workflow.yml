@@ -21,6 +21,6 @@ jobs:
         run: npm install
 
       - name: Run Knex migrations
-        run: npx knex migrate:latest
+        run: knex migrate:latest
         env:
           DATABASE_URL: ${{ secrets.NEON_DB_URL }}
