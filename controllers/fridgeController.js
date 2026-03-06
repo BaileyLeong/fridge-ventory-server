@@ -104,14 +104,17 @@ export const addFridgeItem = async (req, res) => {
       }
     }
 
-    const [id] = await knex("fridge_items").insert({
-      user_id,
-      ingredient_id,
-      quantity,
-      unit: unit || null,
-      expires_at,
-      image_url,
-    });
+    const inserted = await knex("fridge_items")
+      .insert({
+        user_id,
+        ingredient_id,
+        quantity,
+        unit: unit || null,
+        expires_at,
+        image_url,
+      })
+      .returning("id");
+    const id = inserted[0]?.id;
 
     res.status(201).json({
       id,

@@ -23,7 +23,7 @@ const fetchBulkRecipesFromSpoonacular = async (recipeIds) => {
       `${SPOONACULAR_BASE_URL}/recipes/informationBulk`,
       {
         params: { ids: recipeIds.join(","), apiKey: SPOONACULAR_API_KEY },
-      }
+      },
     );
 
     return response.data.map((recipe) => ({
@@ -61,7 +61,7 @@ export const getMealPlan = async (req, res) => {
         "recipes.steps",
         "recipes.ready_in_minutes",
         "recipes.servings",
-        "recipes.cached_at"
+        "recipes.cached_at",
       );
 
     const missingDetails = plan
@@ -122,7 +122,7 @@ export const addMealToPlan = async (req, res) => {
       !requiredExtraFields.every((field) => recipe[field] !== null)
     ) {
       console.log(
-        `Recipe ${recipe_id} not found/incomplete. Fetching via bulk API...`
+        `Recipe ${recipe_id} not found/incomplete. Fetching via bulk API...`,
       );
       await delay(2000);
       const bulkData = await fetchBulkRecipesFromSpoonacular([recipe_id]);
@@ -158,7 +158,7 @@ export const addMealToPlan = async (req, res) => {
       const extendedIngredients = fetchedRecipe.extendedIngredients;
       if (extendedIngredients && extendedIngredients.length > 0) {
         const ingredientNames = extendedIngredients.map((ing) =>
-          ing.name.toLowerCase()
+          ing.name.toLowerCase(),
         );
         const existingIngredients = await knex("ingredients")
           .whereIn(knex.raw("LOWER(name)"), ingredientNames)
@@ -175,7 +175,7 @@ export const addMealToPlan = async (req, res) => {
           };
         });
         const missingIngredients = resolvedIngredients.filter(
-          (ing) => !nameToIdMap.hasOwnProperty(ing.name.toLowerCase())
+          (ing) => !nameToIdMap.hasOwnProperty(ing.name.toLowerCase()),
         );
         if (missingIngredients.length > 0) {
           const ingredientInserts = missingIngredients.map((ing) => ({
@@ -215,12 +215,15 @@ export const addMealToPlan = async (req, res) => {
       }
     }
 
-    const [mealPlanId] = await knex("meal_plans").insert({
-      user_id,
-      recipe_id,
-      meal_type,
-      meal_date: mealDate,
-    });
+    const inserted = await knex("meal_plans")
+      .insert({
+        user_id,
+        recipe_id,
+        meal_type,
+        meal_date: mealDate,
+      })
+      .returning("id");
+    const mealPlanId = inserted[0]?.id;
 
     let groceryItemsAdded = 0;
     for (const ingredient of recipeIngredients) {
@@ -304,8 +307,8 @@ export const updateMealInPlan = async (req, res) => {
     const ingredientsToRemove = oldRequiredIngredients.filter(
       (ingredient_id) =>
         !newRequiredIngredients.some(
-          (ing) => ing.ingredient_id === ingredient_id
-        )
+          (ing) => ing.ingredient_id === ingredient_id,
+        ),
     );
 
     if (ingredientsToRemove.length > 0) {
@@ -409,7 +412,7 @@ export const generateWeeklyMealPlan = async (req, res) => {
           addRecipeInformation: true,
           sort: "max-used-ingredients",
         },
-      }
+      },
     );
 
     if (!response.data.results || response.data.results.length === 0) {

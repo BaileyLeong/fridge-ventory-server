@@ -105,13 +105,16 @@ export const addItemToGroceryList = async (req, res) => {
       });
     }
 
-    const [id] = await knex("grocery_lists").insert({
-      user_id,
-      ingredient_id: ingredient.id,
-      quantity,
-      unit,
-      completed,
-    });
+    const inserted = await knex("grocery_lists")
+      .insert({
+        user_id,
+        ingredient_id: ingredient.id,
+        quantity,
+        unit,
+        completed,
+      })
+      .returning("id");
+    const id = inserted[0]?.id;
 
     return res
       .status(201)
