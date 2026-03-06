@@ -1,12 +1,8 @@
 import "dotenv/config";
 
 export default {
-  client: "mysql2",
+  client: "pg",
   connection: {
-    host: process.env.DB_LOCAL_HOST,
-    database: process.env.DB_LOCAL_DBNAME,
-    user: process.env.DB_LOCAL_USER,
-    password: process.env.DB_LOCAL_PASSWORD,
-    charset: "utf8",
+    connectionString: process.env.DATABASE_URL,
   },
 };
